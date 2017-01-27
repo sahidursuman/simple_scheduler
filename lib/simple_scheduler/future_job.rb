@@ -26,11 +26,17 @@ module SimpleScheduler
       queue_task
     end
 
+    # All Sidekiq scheduled jobs that were queued by Simple Scheduler
+    # @return [Array<Sidekiq::SortedEntry>]
+    def self.all
+      Task.scheduled_set.select do |job|
+        job.display_class == "SimpleScheduler::FutureJob"
+      end
+    end
+
     # Delete all future jobs created by Simple Scheduler from the `Sidekiq::ScheduledSet`.
     def self.delete_all
-      Task.scheduled_set.each do |job|
-        job.delete if job.display_class == "SimpleScheduler::FutureJob"
-      end
+      all.each(&:delete)
     end
 
     private

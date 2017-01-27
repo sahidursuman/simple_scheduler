@@ -164,7 +164,7 @@ describe SimpleScheduler::FutureJob, type: :job do
     end
   end
 
-  describe ".delete_all" do
+  describe "Class Methods" do
     let(:application_job) do
       Sidekiq::SortedEntry.new(
         nil,
@@ -195,18 +195,31 @@ describe SimpleScheduler::FutureJob, type: :job do
     end
 
     before do
-      expect(SimpleScheduler::Task).to receive(:scheduled_set).and_return([
+      expect(SimpleScheduler::Task).to receive(:scheduled_set).at_least(:once).and_return([
         application_job,
         simple_scheduler_job1,
         simple_scheduler_job2
       ])
     end
 
-    it "deletes future jobs scheduled by Simple Scheduler from the Sidekiq::ScheduledSet" do
-      expect(simple_scheduler_job1).to receive(:delete).once
-      expect(simple_scheduler_job2).to receive(:delete).once
-      expect(application_job).not_to receive(:delete)
-      SimpleScheduler::FutureJob.delete_all
+    describe ".all" do
+      it "returns all future jobs scheduled by Simple Scheduler" do
+        expect(described_class.all).to include(simple_scheduler_job1)
+        expect(described_class.all).to include(simple_scheduler_job2)
+      end
+
+      it "doesn't include other future jobs not scheduled by Simple Scheduler" do
+        expect(described_class.all).not_to include(application_job)
+      end
+    end
+
+    describe ".delete_all" do
+      it "deletes future jobs scheduled by Simple Scheduler from the Sidekiq::ScheduledSet" do
+        expect(simple_scheduler_job1).to receive(:delete).once
+        expect(simple_scheduler_job2).to receive(:delete).once
+        expect(application_job).not_to receive(:delete)
+        described_class.delete_all
+      end
     end
   end
 end
