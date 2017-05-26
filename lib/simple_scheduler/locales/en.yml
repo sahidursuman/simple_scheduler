@@ -1,3 +1,11 @@
 en:
-  future_jobs: Future Jobs
-  no_future_jobs: No jobs have been scheduled
+  simple_scheduler:
+    at: At
+    every: Every
+    expires_after: Expires After
+    queue_ahead: Queue Ahead
+    no_tasks: There are no tasks scheduled by Simple Scheduler
+    reset_scheduled_tasks: Reset Scheduled Tasks
+    scheduled_jobs: Scheduled Jobs
+    simple_scheduler_tasks: Simple Scheduler Tasks
+    time_zone: Time Zone

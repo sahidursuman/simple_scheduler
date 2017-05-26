@@ -1,52 +1,165 @@
+<style>
+  table tr.task > td {
+    line-height: 1.8em;
+    padding: 0.8em 1.2em 1.2em;
+  }
+
+  .task-header {
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    flex-wrap: nowrap;
+    margin-bottom: 0.5em;
+  }
+
+  .task-header .task-title {
+    flex: 1 1 auto;
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+
+  .task-header .task-name {
+    color: #aba9a9;
+    flex: 1 1 auto;
+    text-align: right;
+  }
+
+  .task-details {
+    display: flex;
+  }
+
+  .task-details .job-class {
+    color: #6b7b8c;
+    flex: 1 1 auto;
+    font-size: 1.1em;
+    font-weight: bold;
+  }
+
+  .task-details .params {
+    color: #969696;
+    display: flex;
+    flex: 1 1 auto;
+    max-width: 360px;
+    text-align: right;
+  }
+
+  .task-details .param {
+    display: flex;
+    flex: 1 1 auto;
+    margin-right: 1em;
+  }
+
+  .task-details .param strong,
+  .task-details .param span {
+    flex: 1 1 auto;
+  }
+
+  .task-details .param:last-of-type {
+    margin-right: 0;
+  }
+
+  .task-schedule {
+    display: flex;
+  }
+
+  .task-schedule .next-run {
+    flex: 1 1 auto;
+  }
+
+  .task-schedule .scheduled-jobs {
+    flex: 1 1 auto;
+    text-align: right;
+  }
+
+  @media (max-width: 700px) {
+    .task-header .task-name {
+      display: none;
+    }
+
+    .task-details {
+      display: block;
+    }
+
+    .task-details .params {
+      text-align: left;
+    }
+
+    .task-schedule {
+      display: block;
+    }
+
+    .task-schedule .scheduled-jobs {
+      text-align: left;
+    }
+  }
+</style>
+
 <header class="row">
-  <div class="span5 col-sm-5">
-    <h3><%=t "future_jobs" %></h3>
+  <div class="span5 col-sm-8">
+    <h3><%= t("simple_scheduler.simple_scheduler_tasks") %></h3>
+  </div>
+
+  <div class="col-sm-4 text-right" style="margin-top: 25px;">
+    <a
+      id="reset-scheduled-tasks"
+      class="btn btn-primary"
+      href="<%= root_path %>simple_scheduler"
+    >
+      <%= t("simple_scheduler.reset_scheduled_tasks") %>
+    </a>
   </div>
 </header>
 
-<% if @future_jobs.size > 0 %>
-  <table class="table table-hover table-bordered table-striped table-white">
-    <thead>
-      <th class="checkbox-column">
-        <input type="checkbox" class="check_all" />
-      </th>
-      <th><%= t("When") %></th>
-      <th><%= t("Queue") %></th>
-      <th><%= t("Task") %></th>
-      <th><%= t("Job") %></th>
-    </thead>
-
+<% if @tasks.size > 0 %>
+  <table class="table table-bordered table-white">
     <tbody>
-      <% @future_jobs.each do |entry| %>
-        <% args = entry.display_args[0].symbolize_keys %>
-        <tr>
+      <% @tasks.each do |task| %>
+        <tr class="task">
           <td>
-            <input type='checkbox' name='key[]' value='<%= job_params(entry.item, entry.score) %>' />
-          </td>
+            <div class="task-header">
+              <div class="task-title"><%= task.params[:name].titleize %></div>
+              <div class="task-name"><%= task.params[:name] %></div>
+            </div>
 
-          <td>
-            <a href="<%= root_path %>scheduled/<%= job_params(entry.item, entry.score) %>">
-              <%= relative_time(entry.at) %>
-            </a>
-            <br>
-            <%= I18n.l(entry.at.in_time_zone(args[:tz]), format: :long) %>
-          </td>
+            <div class="task-details">
+              <div class="job-class"><%= task.params[:class] %></div>
 
-          <td>
-            <a href="<%= root_path %>queues/<%= entry.queue %>">
-              <%= entry.queue %>
-            </a>
-          </td>
+              <div class="params">
+                <div class="param">
+                  <strong><%= t("simple_scheduler.every") %>:</strong>
+                  <span><%= task.params[:every] %></span>
+                </div>
 
-          <td>
-            <%= args[:name] %>
-          </td>
+                <div class="param">
+                  <strong><%= t("simple_scheduler.at") %>:</strong>
+                  <span><%= task.params.fetch(:at, "--") %></span>
+                </div>
 
-          <td><%= args[:class] %></td>
+                <div class="param">
+                  <strong><%= t("simple_scheduler.expires_after") %>:</strong>
+                  <span><%= task.params.fetch(:expires_after, "--") %></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task-schedule">
+              <div class="next-run">
+                <strong>Next Run:</strong>
+                <%= task.existing_run_times.first.in_time_zone(task.params[:tz]).strftime("%l:%M %p %A, %B %e, %Y %Z") %>
+              </div>
+
+              <div class="scheduled-jobs">
+                <a
+                  href="<%= root_path %>simple_scheduler/tasks/<%= task.params[:name] %>"
+                >
+                  <%= t("simple_scheduler.scheduled_jobs") %>
+                </a>
+              </div>
+            </div>
+          </td>
         </tr>
       <% end %>
     </tbody>
   </table>
 <% else %>
-  <span class='alert alert-success'><%= t("no_future_jobs") %></span>
+  <span class="alert alert-success"><%= t("simple_scheduler.no_tasks") %></span>
 <% end %>
