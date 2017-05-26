@@ -6,9 +6,9 @@ module SimpleScheduler
 
       # Simple Scheduler Page
       app.get "/simple_scheduler" do
-        @future_jobs = FutureJob.all
-        view_path = File.join(File.expand_path("..", __FILE__), "views", "simple_scheduler.html.erb")
-        render(:erb, File.read(view_path))
+        @tasks = SimpleScheduler::Task.all.sort_by { |task| task.params[:name] }
+        file_path = File.join(File.expand_path("..", __FILE__), "views", "simple_scheduler.html.erb")
+        render(:erb, File.read(file_path))
       end
     end
   end

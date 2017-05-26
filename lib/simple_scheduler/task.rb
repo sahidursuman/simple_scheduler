@@ -103,6 +103,18 @@ module SimpleScheduler
       @time_zone ||= params[:tz] ? ActiveSupport::TimeZone.new(params[:tz]) : Time.zone
     end
 
+    # Returns the unique set of scheduled tasks by inspecting the scheduled jobs in Sidekiq.
+    # @return Array<SimpleScheduler::Task>
+    def self.all
+      tasks_params = FutureJob.all.map do |job|
+        params = job.display_args[0].symbolize_keys
+        params.delete(:_aj_symbol_keys)
+        params
+      end
+      tasks_params.uniq! { |params| params[:class] }
+      tasks_params.map { |params| new(params) }
+    end
+
     # Loads the scheduled jobs from Sidekiq once to avoid loading from
     # Redis for each task when looking up existing scheduled jobs.
     # @return [Sidekiq::ScheduledSet]
